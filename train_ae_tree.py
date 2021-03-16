@@ -11,7 +11,7 @@ from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 import sys
 sys.path.append('./model/')
-from model_ae_tree import *
+from model_ae_tree import * # which file are we importing?
 import copy
 import time
 from tensorboardX import SummaryWriter
@@ -222,31 +222,42 @@ def train_ae(model, train_loader, test_loader, device, loss_save_dir, M=1, num_e
 
 if __name__ == '__main__':
     # load dataset
-    trainset = TreeData(data_folder="Tree_2000_64_batch5.pickle", train=True, split=0.8, n_feature=8)
+    trainset = TreeData(data_folder="./data/Tree_2000_64_batch5.pickle", train=True, split=0.8, n_feature=8)
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=1, shuffle=True)
-    testset = TreeData(data_folder="Tree_2000_64_batch5.pickle", train=False, split=0.8, n_feature=8)
+    testset = TreeData(data_folder="./data/Tree_2000_64_batch5.pickle", train=False, split=0.8, n_feature=8)
+    # python iterable over a dataset
     test_loader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=False)
 
     # train model
+
+    # Sets the current device
     torch.cuda.set_device(0)
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    # log file
     loss_save_dir = './log/'
     writer = SummaryWriter('tree_batch8')
-    model = AE(device, weight=1, save_name='tree_batch', n_feature=8)
+    # create an instance of AE() class
+    model = AE(device, weight=1, save_name='tree''_batch', n_feature=8)
     model.to(device)
+    # create an instance of train_ae() class
     train_ae(model, train_loader, test_loader, device, loss_save_dir, num_epochs=1000, M=1)
+    # export class scalars as json file
     writer.export_scalars_to_json("./tree_batch.json")
     writer.close()
 
     # test
     X, I_list, Feature, Node_is_leaf = next(iter(test_loader))
     X = X.squeeze(0)
+    # remove single-dimensional entries from the shape of an array numpy.squeeze()
     Feature = Feature.squeeze(0)
     Node_is_leaf = Node_is_leaf.squeeze(0)
     X = X.float()
+    # call encode() from AE()
     Feature_New = model.encode(X, Feature, I_list)
     X_New = torch.zeros(X.shape)
+    # call decode() from AE()
     X_New, Feature, Loss, Loss_P, Loss_Leaf, Num = model.decode(X, Node_is_leaf, X_New, Feature_New, I_list)
+
     X = X.detach().numpy()
     X_New = X_New.detach().numpy()
 

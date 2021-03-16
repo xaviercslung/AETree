@@ -64,6 +64,7 @@ class PositionalEncoding(nn.Module):
         # print(sinusoid_table.shape)
         sinusoid_table[:, 0::2] = np.sin(sinusoid_table[:, 0::2])  # dim 2i
         sinusoid_table[:, 1::2] = np.cos(sinusoid_table[:, 1::2])  # dim 2i+1
+        # CPU tensor
         sinusoid_table = torch.FloatTensor(sinusoid_table)
         sinusoid_table = sinusoid_table.to(self.device)
         return sinusoid_table
@@ -551,7 +552,7 @@ class AE(SaveableModule):
 
 
 if __name__ == '__main__':
-    # what does root_dir do? I cannot find it.
+    # what does root_dir do? Where is the data?
     # get data from pickle file and performs manipulation
     Dataset = TreeData(root_dir)
 
