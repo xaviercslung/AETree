@@ -26,6 +26,13 @@ git checkout main
 git merge [branch_name]
 ```
 
+Check log and remove last commit:
+```
+git log --oneline
+git reset --soft <HEAD~1>
+git status
+```
+How to solve a merge conflict, see [Resolving a merge conflict using the command line](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/resolving-a-merge-conflict-using-the-command-line)
 
-
+How to reset, revert, and return to previous states in Git, see [previous states](https://opensource.com/article/18/6/git-reset-revert-rebase-commands)
 
