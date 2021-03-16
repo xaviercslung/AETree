@@ -2,23 +2,30 @@
 
 ## git commands
 
-Check/Switch branch and create new branch
-- git checkout [branch_name]
-- git checkout -a
-- git checkout -b [name_of_your_new_branch]
+Check/Switch/Delete branch and create new branch:
+```
+git checkout [branch_name]
+git checkout -a
+git checkout -b [name_of_your_new_branch]
+git branch -d/-D(force delete) [branch_name]  (local)
+git push origin --delete [branch_name]  (remote)
+```
+Push code to your working branch
+```
+git add [file_name or “.” for all file within current dir]
+git commit -m “commit_message”
+git push origin [branch_name]
+
+git pull (to get updates from remove)
+
+```
+
+Merge with main (View pull request on github.com and get someone to review the code):
+```
+git checkout main
+git merge [branch_name]
+```
 
 
-- git push origin [name_of_your_new_branch]
-- git pull (to get updates from remove)
-- git branch -d/-D(force delete) [branch_name]
-- git push origin --delete [branch_name]
 
-Merge with main
-1. git checkout main
-2. git merge [branch_name]
-
-View pull request on github.com and get someone to review
-1. git add [file_name or “.” for all file within current dir]
-2. git commit -m “commit_message”
-3. git push origin [branch_name]
 
