@@ -9,9 +9,11 @@ import numpy as np
 
 MODELS_EXT = '.dms'
 
-
+# helper function for get_MLP_layers
 def get_and_init_FC_layer(din, dout):
+    # applies a linear transformation to the incoming data
     li = nn.Linear(din, dout)
+    # return the recommended gain value for the given nonlinearity function
     nn.init.xavier_uniform_(li.weight.data, gain=nn.init.calculate_gain('relu'))
     return li
 
@@ -76,7 +78,7 @@ class PositionalEncoding(nn.Module):
 
 class TreeData(Dataset):
     # the data folder should be data, change dir to ./data/Tree_2000_64_batch5.pickle
-    def __init__(self, data_folder='./Tree_2000_64_batch5.pickle', train=True, split=0.8, n_feature=16):
+    def __init__(self, data_folder='./data/Tree_2000_64_batch5.pickle', train=True, split=0.8, n_feature=16):
         # load pickle file from dir:'./Tree_2000_64_batch5.pickle'
         self.data_folder = data_folder
         # set number of features
@@ -119,11 +121,12 @@ class TreeData(Dataset):
     def __len__(self):
         return len(self.node_list)
 
-
+# all the encoding algorithm starts here
 class Encoder(nn.Module):
     def __init__(self, n_feature=16, in_channel=16 + 3):
         super(Encoder, self).__init__()
         self.n_feature = n_feature
+        # Abandoned variable
         out_channel = n_feature
         self.W = get_MLP_layers((in_channel, n_feature, n_feature, n_feature))
         # self.b = get_MLP_layers((in_channel, n_feature, n_feature, n_feature))
@@ -418,6 +421,7 @@ class AE(SaveableModule):
         #     print(((p[:,0:1]-center[:,0:1])*cos).shape, cos.shape, x_.shape)
         return torch.cat((x_, y_), 1)
 
+    # Helper function. need to look into it
     def get_box(self, P, F):
         # print(P.shape, F.shape)
         ld = torch.cat((P[:, 0:1] - F[:, 0:1] / 2, P[:, 1:2] - F[:, 1:2] / 2), -1)
@@ -440,6 +444,7 @@ class AE(SaveableModule):
             box_r = []
         return box_r
 
+    # Helper function. need to look into it
     def cal_distance_ab(self, q, p):
         '''
         Input:
@@ -459,6 +464,7 @@ class AE(SaveableModule):
         # dis = dis_xy + dis_s_wha
         return dis
 
+    # Helper function. need to look into it
     def cal_distance_re(self, q, p):
         '''
         Input:
@@ -475,12 +481,14 @@ class AE(SaveableModule):
 
         return dis
 
+    # Helper function. need to look into it
     def get_Binary_loss(self, left_is_leaf, left_is_leaf2, right_is_leaf, right_is_leaf2):
 
         left_loss = F.binary_cross_entropy(left_is_leaf2, left_is_leaf, reduction='none')
         right_loss = F.binary_cross_entropy(right_is_leaf2, right_is_leaf, reduction='none')
         return left_loss + right_loss
 
+    # Helper function. need to look into it
     def get_Position_loss(self, leaf_p, leaf_p2, right_p, right_p2):
         # l_l_r_r = self.cal_distance(leaf_p, leaf_p2) + self.cal_distance(right_p, right_p2)
         # l_r_l_r = self.cal_distance(leaf_p, right_p2) + self.cal_distance(right_p, leaf_p2)
@@ -491,6 +499,7 @@ class AE(SaveableModule):
 
         return loss, index
 
+    # Helper function. need to look into it
     def inference(self, P, F, n, out=[]):
         '''
         Input:
@@ -516,6 +525,7 @@ class AE(SaveableModule):
         else:
             return out
 
+    # Helper function. need to look into it
     def loss_on_loader(self, loader, device):
         # calculate loss on all data
         total = 0.0
@@ -552,11 +562,13 @@ class AE(SaveableModule):
 
 
 if __name__ == '__main__':
-    # what does root_dir do? Where is the data?
+    # what does root_dir refer to
     # get data from pickle file and performs manipulation
     Dataset = TreeData(root_dir)
 
+    # python iterable over a dataset
     train_loader = torch.utils.data.DataLoader(Dataset, batch_size=1)
+
     node_xys, I_list, node_fea, node_is_leaf = next(iter(train_loader))
     model = AE()
     out = model(node_xys, node_fea, I_list, node_is_leaf)
