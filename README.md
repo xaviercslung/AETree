@@ -37,3 +37,4 @@ How to solve a merge conflict, see [Resolving a merge conflict using the command
 
 How to reset, revert, and return to previous states in Git, see [previous states](https://opensource.com/article/18/6/git-reset-revert-rebase-commands)
 
+Guide to terminal, see [video](https://www.youtube.com/watch?v=aKRYQsKR46I)
