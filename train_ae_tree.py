@@ -177,10 +177,10 @@ def train_ae(model, train_loader, test_loader, device, loss_save_dir, M=1, num_e
 
 
 
-trainset = TreeData(data_folder="./data/Tree_2000_64_batch5.pickle", train=True, split=0.8, n_feature=512, num_box=32, batch_size=50)
+trainset = TreeData(data_folder="../Tree_2000_64_batch5_box_re_new2_32_45000_batch50_2.pickle", train=True, split=0.8, n_feature=512, num_box=32, batch_size=50)
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=1, shuffle=True)
 
-testset = TreeData(data_folder="./data/Tree_2000_64_batch5.pickle", train=False, split=0.8, n_feature=512, num_box=32, batch_size=50)
+testset = TreeData(data_folder="../Tree_2000_64_batch5_box_re_new2_32_45000_batch50_2.pickle", train=False, split=0.8, n_feature=512, num_box=32, batch_size=50)
 test_loader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=False)
 
 
