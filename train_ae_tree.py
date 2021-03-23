@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# In[2]:
+
+
 import math
 import numpy as np
 from collections import defaultdict
@@ -9,113 +12,17 @@ import torch
 from torch.optim import Adam
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
+
 import sys
-sys.path.append('./model/')
-from model_ae_tree import * # which file are we importing?
+sys.path.append('../')
+
+from model_ae_tree_box_ab2_new_re_weight_lstm_print import *
 import copy
 import time
 from tensorboardX import SummaryWriter
 
-from matplotlib import pyplot as plt
-import matplotlib.patches as patches
-from matplotlib.axes._axes import _log as matplotlib_axes_logger
-matplotlib_axes_logger.setLevel('ERROR')
 
-def draw_point(ax, pc, min_xy, txt, s, color='b'):
-#     plt.figure(num=3, figsize=(5, 5))
-#     fig = plt.figure()
-    
-    for i in range(len(pc)):
-        X, Y= pc[i,:2]
-        mx, my = min_xy[i,:2]
-        scale = pc[i,2]
-        plt.scatter(X, Y, c=color,s=s+20)
-        plt.annotate(txt[i], pc[i,:2], size=s)  
-        rect = patches.Rectangle((mx, my), scale, scale,linewidth=scale*4, edgecolor=color, facecolor='none')
-        ax.add_patch(rect)
-        
-    plt.axis('equal')
 
-def plot_tree(X, I, min_xy):
-    
-    fig = plt.figure(figsize=(15, 15))
-    ax = fig.add_subplot(1,1,1)
-    colors = [plt.cm.hsv(i/float(len(I)+1)) for i in range(len(I)+1)]
-    leaf_idx = np.arange(64)
-    draw_point(ax, X[leaf_idx], min_xy[leaf_idx], leaf_idx, 10, colors[0])
-
-    for i, Ii in enumerate(I):
-#         print(i, Ii)
-        Ii = Ii.squeeze(0).detach().numpy()
-        node_index = (Ii[Ii[:,2] < 127][:,2]).astype('int32')
-        draw_point(ax, X[node_index], min_xy[node_index], node_index, 10+2*i, colors[i+1])
-#     plt.show()
-
-def draw_point2(pc, label):
-    for i in range(len(pc)):
-        X, Y= pc[i]
-        txt = label[i]
-        plt.scatter(X, Y, c='b')
-        plt.annotate(str(txt), pc[i], size=12)
-    plt.axis('equal')
-    my_x_ticks = np.arange(0, 1.2, 0.2)
-    my_y_ticks = np.arange(0, 1.2, 0.2)
-    plt.xticks(my_x_ticks)
-    plt.yticks(my_y_ticks)
-#     plt.axis('on')
-    
-def plot_samples(samples, label, n, m, save=False, savename='pclouds'):
-    fig = plt.figure(figsize=(5*m,5*n))
-    fig.set_tight_layout(True)
-    for i in range(n):
-        for j in range(m):
-            idx = i * m + j
-            ax = fig.add_subplot(n, m, idx+1)
-#             print(idx)
-            draw_point2(samples[idx], label[idx])  
-    if save:
-        plt.savefig(savename)
-
-    plt.show()
-
-def get_minxy_s_list(X_tree0, X_tree0_r, I_list):
-    
-    child_list = [[] for _ in range(len(X_tree0))]
-    s_list = np.zeros((X_tree0.shape[0], 1))
-    min_xy_list = np.zeros((X_tree0.shape[0], 2))
-    min_xy_list[:64] = X_tree0[:64,:2]
-
-    s_list2 = np.zeros((X_tree0_r.shape[0], 1))
-    min_xy_list2 = np.zeros((X_tree0_r.shape[0], 2))
-    min_xy_list2[:64] = X_tree0_r[:64,:2]
-
-    for i, Ii in enumerate(I_list):
-        Ii = Ii.squeeze(0).detach().numpy()
-
-        node_index = (Ii[Ii[:,2] < 127]).astype('int32')
-    #     print(node_index)|
-        child_node = node_index[:,:2]
-        father_node =  node_index[:,2]
-        
-        for i,idx in enumerate(father_node):
-            tmp_child = []
-            for node_id in child_node[i]:
-                if(len(child_list[int(node_id)])>0):
-                    for child in child_list[int(node_id)]:
-                        tmp_child.append(child)
-                else: 
-                    tmp_child.append(int(node_id))
-            child_xy = X_tree0[tmp_child,:2]
-            min_xy_list[int(idx)] = np.min(child_xy, axis=0)
-            s_list[int(idx)] = max(np.max(child_xy, axis=0) - np.min(child_xy, axis=0))
-            
-            child_xy2 = X_tree0_r[tmp_child,:2]
-            min_xy_list2[int(idx)] = np.min(child_xy2, axis=0)
-            s_list2[int(idx)] = max(np.max(child_xy2, axis=0) - np.min(child_xy2, axis=0))
-
-            child_list[int(idx)] = tmp_child
-
-    return min_xy_list, s_list, min_xy_list2, s_list2
 
 def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, device, loss_save_dir,
                        num_epochs=100, M=1):
@@ -128,7 +35,18 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
     
     try:
         for epoch in range(num_epochs):
-
+            
+            train_loss = 0
+            train_loss_ab = 0
+#             train_loss_ov = 0
+            train_loss_p = 0
+            train_loss_leaf = 0
+            
+            train_loss_left_check = np.zeros((20,1))
+            train_loss_right_check = np.zeros((20,1))
+            
+            num = 0
+            start_time = time.time()
             for i,(node_xys, I_list, node_fea, node_is_leaf) in enumerate(train_loader, 0):
                 optimizer.zero_grad()
 #                 print(i)
@@ -136,46 +54,74 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
                 node_xys = node_xys.float()
                 I_list = [t.to(device) for t in I_list ]
                 node_fea = node_fea.to(device)
+                node_fea = node_fea.float()
                 node_is_leaf = node_is_leaf.to(device)
                 
-                loss, _, _, _, _, _ = model(node_xys,node_fea,I_list,node_is_leaf)
+                loss, loss_ab, loss_p, loss_leaf, left_check, right_check = model(node_xys,node_fea,I_list,node_is_leaf)
                 loss.backward()
                 
+                for i,ITEM in enumerate(left_check):
+                    train_loss_left_check[i] += ITEM.item()
+                for i,ITEM in enumerate(right_check):
+                    train_loss_right_check[i] += ITEM.item()
 #                 for name, parms in model.named_parameters():
 #                     print('-->name:', name, '-->grad_requirs:',parms.requires_grad,' -->grad_value:',parms.grad,' -->leaf:', parms.is_leaf)
                 
 #                 torch.nn.utils.clip_grad_norm(model.parameters(), 5)
+
+                train_loss += loss.item()
+                train_loss_ab += loss_ab
+#                 train_loss_ov += loss_overlap
+                train_loss_p += loss_p.item()
+                train_loss_leaf += loss_leaf
+                num += 1
+                
                 lr = optimizer.param_groups[0]['lr']
-                optimizer.param_groups[0]['lr'] = max(lr, 1e-5)
+                optimizer.param_groups[0]['lr'] = max(lr, 1e-6)
                 
                 optimizer.step()
             scheduler.step()
             
+            train_loss = train_loss/num
+            train_loss_ab = train_loss_ab/num
+#             train_loss_ov = train_loss_ov/num
+            train_loss_p = train_loss_p/num
+            train_loss_leaf = train_loss_leaf/num
+            train_loss_left_check = train_loss_left_check/num
+            train_loss_right_check = train_loss_right_check/num
+            
+            LOG_loss.write('Epoch: %d\n' %(epoch + 1))
+            LOG_loss.write(f'Train_Loss_Left: {train_loss_left_check}\nTrain_Loss_right: {train_loss_right_check}\n')                               
+            LOG_loss.flush()
+            
+            end_time = time.time()
+            train_time = end_time - start_time
             if (epoch % 1) == 0 or epoch == num_epochs-1:
-                start_time = time.time()
-                train_loss, train_loss_rec, train_loss_rec_xy, train_loss_rec_s, train_loss_p, train_loss_leaf = model.loss_on_loader(train_loader, device)
-                end_time = time.time()
-                train_time = end_time - start_time
+#                 start_time = time.time()
+#                 train_loss, train_loss_ab, train_loss_p, train_loss_leaf = model.loss_on_loader(train_loader, device)
+#                 end_time = time.time()
+#                 train_time = end_time - start_time
                 
                 start_time = time.time()
-                test_loss, test_loss_rec, test_loss_rec_xy, test_loss_rec_s, test_loss_p, test_loss_leaf = model.loss_on_loader(test_loader, device)
+                test_loss, test_loss_ab, test_loss_p, test_loss_leaf, test_loss_left_check, test_loss_right_check = model.loss_on_loader(test_loader, device)
+                
+                LOG_loss.write(f'Test_Loss_Left: {test_loss_left_check}\nTest_Loss_right: {test_loss_right_check}\n')                               
+                LOG_loss.flush()
+            
                 end_time = time.time()
                 test_time = end_time - start_time
                 
                 logs['train_loss'].append(train_loss)
                 logs['test_loss'].append(test_loss)
-                
-                writer.add_scalars('ae',
+
+                    
+                writer.add_scalars('ae_lstm_32_print_45000_time_leaf_rerun2',
                                    {'train_loss': train_loss,
-                                    'train_loss_rec': train_loss_rec,
-                                    'train_loss_rec_xy': train_loss_rec_xy,
-                                    'train_loss_rec_s': train_loss_rec_s,
+                                    'train_loss_ab': train_loss_ab,
                                     'train_loss_p': train_loss_p,
                                     'train_loss_leaf': train_loss_leaf,
                                     'test_loss': test_loss,
-                                   'test_loss_rec': test_loss_rec,
-                                    'test_loss_rec_xy': test_loss_rec_xy,
-                                    'test_loss_rec_s': test_loss_rec_s,
+                                   'test_loss_ab': test_loss_ab,
                                    'test_loss_p': test_loss_p,
                                    'test_loss_leaf': test_loss_leaf,}, epoch)
                 
@@ -186,10 +132,15 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
                     if test_loss < best_loss:
                         best_loss = test_loss
                         best_params = copy.deepcopy(model.state_dict())
-
+                        
+                        model.save_to_drive(name=model.DEFAULT_SAVED_NAME+"_best")
+                        print("Epoch {epoch} model saving ...".format(epoch=epoch))
+                        
                     print("Epoch {epoch} Lr={Lr}, train loss={train_loss}, traintime={train_time}, test loss={test_loss}, test time={test_time}"
                            .format(epoch=epoch, Lr= lr, train_loss=train_loss, train_time=train_time, test_loss=test_loss, test_time=test_time)
                          )
+            if (epoch % 200) == 0 or epoch == num_epochs-1:
+                model.save_to_drive(name=model.DEFAULT_SAVED_NAME+"_"+str(epoch))
 
     except KeyboardInterrupt:
         pass
@@ -209,84 +160,41 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
         os.makedirs(loss_save_dir)
     np.save(loss_save_dir+model.DEFAULT_SAVED_NAME, np_logs)
     print('done.')
+    
+    LOG_loss.close()
+    
 
 
 def train_ae(model, train_loader, test_loader, device, loss_save_dir, M=1, num_epochs=1000):
+#     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4, drop_last=True)
+#     test_loader = DataLoader(test_dataset, batch_size=32, num_workers=4, drop_last=True)
 
-    optimizer = Adam(model.parameters(), lr=1e-2)
-    scheduler = StepLR(optimizer, step_size=30, gamma=0.5)
+    optimizer = Adam(model.parameters(), lr=1e-3)
+    scheduler = StepLR(optimizer, step_size=400, gamma=0.5)
 
     train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, device, loss_save_dir,
                        M=M, num_epochs=num_epochs)
 
 
-if __name__ == '__main__':
-    # load dataset
-    trainset = TreeData(data_folder="./data/Tree_2000_64_batch5.pickle", train=True, split=0.8, n_feature=8)
-    train_loader = torch.utils.data.DataLoader(trainset, batch_size=1, shuffle=True)
-    testset = TreeData(data_folder="./data/Tree_2000_64_batch5.pickle", train=False, split=0.8, n_feature=8)
-    # python iterable over a dataset
-    test_loader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=False)
 
-    # train model
+trainset = TreeData(data_folder="./data/Tree_2000_64_batch5.pickle", train=True, split=0.8, n_feature=512, num_box=32, batch_size=50)
+train_loader = torch.utils.data.DataLoader(trainset, batch_size=1, shuffle=True)
 
-    # Sets the current device
-    torch.cuda.set_device(0)
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    # log file
-    loss_save_dir = './log/'
-    writer = SummaryWriter('tree_batch8')
-    # create an instance of AE() class
-    model = AE(device, weight=1, save_name='tree''_batch', n_feature=8)
-    model.to(device)
-    # create an instance of train_ae() class
-    train_ae(model, train_loader, test_loader, device, loss_save_dir, num_epochs=1000, M=1)
-    # export class scalars as json file
-    writer.export_scalars_to_json("./tree_batch.json")
-    writer.close()
+testset = TreeData(data_folder="./data/Tree_2000_64_batch5.pickle", train=False, split=0.8, n_feature=512, num_box=32, batch_size=50)
+test_loader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=False)
 
-    # test
-    X, I_list, Feature, Node_is_leaf = next(iter(test_loader))
-    X = X.squeeze(0)
-    # remove single-dimensional entries from the shape of an array numpy.squeeze()
-    Feature = Feature.squeeze(0)
-    Node_is_leaf = Node_is_leaf.squeeze(0)
-    X = X.float()
-    # call encode() from AE()
-    Feature_New = model.encode(X, Feature, I_list)
-    X_New = torch.zeros(X.shape)
-    # call decode() from AE()
-    X_New, Feature, Loss, Loss_P, Loss_Leaf, Num = model.decode(X, Node_is_leaf, X_New, Feature_New, I_list)
 
-    X = X.detach().numpy()
-    X_New = X_New.detach().numpy()
 
-    # visualzation
-    # plot the result of first tree
-    X_tree0 = X[:127]
-    X_tree0_r = X_New[:127]
-    min_xy_list, s_list, min_xy_list2, s_list2 = get_minxy_s_list(X_tree0, X_tree0_r, I_list)
+torch.cuda.set_device(0)
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-    plot_tree(X_tree0, I_list, min_xy_list)
-    plt.savefig('./log/tree1.png')
-    plt.show()
-
-    X_tree0_r2 = np.hstack((X_tree0_r[:,:2], s_list2))
-    plot_tree(X_tree0_r2, I_list, min_xy_list2)
-    plt.savefig('./log/tree1_r.png')
-    plt.show()
-
-    # plot the position result of different level
-    data_list = []
-    txt_list = []
-    for i, Ii in enumerate(I_list):
-        Ii = Ii.squeeze(0).detach().numpy()
-        node_index = (Ii[Ii[:,2] < 127][:,2]).astype('int32')
-        data_list.append(X[node_index,:2])
-        txt_list.append(node_index)
-        data_list.append(X_New[node_index,:2])
-        txt_list.append(node_index)
-
-    plot_samples(data_list, txt_list, len(I_list), 2, save=True, savename='./log/tree_batch2.png')
+loss_save_dir = './log/'
+LOG_loss = open(os.path.join(loss_save_dir,'tree_lstm_32_print_45000_time_leaf_rerun2.txt'),'w')
+writer = SummaryWriter('tree_lstm_32boxes')
+model = AE(device, leaf_loss=True, weight_leaf=0.01, weight_type=2, save_name='tree_lstm_32_print_45000_time_leaf_rerun2', n_feature=512)
+model.to(device)
+train_ae(model, train_loader, test_loader, device, loss_save_dir, num_epochs=4000, M=1)
+writer.export_scalars_to_json("./tree_lstm_32_print_45000_time_leaf_rerun2.json")
+writer.close()
 
 
