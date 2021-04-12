@@ -1,0 +1,31 @@
+
+
+Copy folder:
+cp -r capstone-AI4CE *******
+
+Save slurm file:
+cd /home/<NYU_ID>/slurm & cp /home/<NYU_ID>/Tree_generation/*.out .
+
+To kill a slurm job:
+squeue -u $USER
+scancel <job_ID>
+
+To rmove all output from the program:
+rm -rf log & rm -rf tree_lstm_32boxes/ & rm *.out
+
+
+sshpass -f Live99long! scp -o 'ProxyCommand ssh sc8635@gw.hpc.nyu.edu -W %h:%p' . sc8635@greene.hpc.nyu.edu:/home/sc8635/Tree_2000_64_batch5_box_re_new2_32_45000_batch50_2.pickle
+
+scp -o 'ProxyCommand ssh username@B -W %h:%p' someFile username@C:/some/path
+
+
+scp -r -o 'ProxyCommand ssh sc8635@gw.hpc.nyu.edu -W %h:%p' sc8635@greene.hpc.nyu.edu:/home/sc8635/test_02/tree_lstm_32boxes .
+
+
+scp -r sc8635@greene.hpc.nyu.edu:/home/sc8635/test_01/tree_lstm_32boxes .
+
+tensorboard --logdir=./tree_lstm_32boxes
+
+pip3 install tensorboard
+
+conda install tensorboard
