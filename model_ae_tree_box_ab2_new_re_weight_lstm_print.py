@@ -75,7 +75,7 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         self.n_feature = n_feature
         out_channel = n_feature
-        self.rnn = nn.LSTMCell(in_channel, n_feature//2)
+        self.rnn = nn.LSTMCell(in_channel, n_feature//2) # TODO
         # self.W = get_MLP_layers((in_channel, n_feature, n_feature, n_feature))
         # self.b = get_MLP_layers((in_channel, n_feature, n_feature, n_feature))
 
@@ -92,8 +92,8 @@ class Encoder(nn.Module):
         h_l, c_l = torch.chunk(Feature_left, 2, 1)
         h_r, c_r = torch.chunk(Feature_right, 2, 1)
         # print(h_l.shape, c_l.shape)
-        h_l_o, c_l_o = self.rnn(X_left, (h_l, c_l)) 
-        h_r_o, c_r_o = self.rnn(X_right, (h_r, c_r)) 
+        h_l_o, c_l_o = self.rnn(X_left, (h_l, c_l)) #TODO what is the output?
+        h_r_o, c_r_o = self.rnn(X_right, (h_r, c_r)) #TODO
         # print(h_l_o.shape, h_r_o.shape)
         h_o = h_l_o + h_r_o
         c_o = c_l_o + c_r_o
@@ -108,14 +108,14 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
         self.n_feature = n_feature
        
-        self.fc_h = nn.Linear(n_feature, 2 * n_feature)
-        self.rnn = nn.LSTMCell(n_feature + 5, n_feature)
+        self.fc_h = nn.Linear(n_feature, 2 * n_feature) #TODO
+        self.rnn = nn.LSTMCell(n_feature + 5, n_feature)#TODO
         self.fc_l= nn.Linear(n_feature//2, 6)
         self.fc_r= nn.Linear(n_feature//2, 6)
 
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-        self.relu = nn.ReLU()
+        self.relu = nn.ReLU() #TODO
         self.drop = nn.Dropout(0.2)
 
     def forward(self, Feature_father, P_father):
@@ -137,7 +137,7 @@ class Decoder(nn.Module):
         # print(z_father.shape, h_father.shape, c_father.shape)
         input_father = torch.cat((P_father, Feature_father), 1)  # (n, d+3)
         # print(input_father.shape)
-        h_father_o, c_father_o = self.rnn(input_father, (h_father, c_father))  # (n, (d+3+1)*2)
+        h_father_o, c_father_o = self.rnn(input_father, (h_father, c_father))  # (n, (d+3+1)*2) #TODO
         # print(h_father_o.shape, c_father_o.shape)
 
         h_left, h_right = torch.chunk(h_father_o, 2, 1)
@@ -194,12 +194,12 @@ class AE(SaveableModule):
         Feature_New = Feature.clone()
         num_I = len(I_list)
         for i in range(num_I):
-            I = I_list[i].squeeze(0)   # (ni, 3)
+            I = I_list[i].squeeze(0)   # (ni, 3) #TODO
             left_p = X[I[:,0]]  # (ni, 6) 
             right_p = X[I[:,1]]  # (ni, 6) 
             left_f = Feature_New[I[:,0]]  # (ni, d) 
             right_f = Feature_New[I[:,1]]  # (ni, d)
-            out = self.encoder(left_p, right_p, left_f, right_f)  # (ni, d) 
+            out = self.encoder(left_p, right_p, left_f, right_f)  # (ni, d) #TODO
             Feature_New[I[:,2]] = out
 
         return Feature_New
@@ -221,7 +221,7 @@ class AE(SaveableModule):
         X_r = X.clone()
         X_ab_xy = X.clone()
         X_ab_xy_r = X.clone()
-        Feature = Feature_New.clone()
+        Feature = Feature_New.clone() #TODO LSTM output
         Loss_P = 0.0
         Loss_Leaf = 0.0
         num = 0
@@ -229,7 +229,7 @@ class AE(SaveableModule):
         right_check = []
 
         for i in range(num_I):
-            I = I_list[num_I-1-i].squeeze(0)  # (n, ni)
+            I = I_list[num_I-1-i].squeeze(0)  # (n, ni) #TODO squeeze()
 
             p_left = X_ab_xy[I[:,0]]  # (ni, 6)
             p_right = X_ab_xy[I[:,1]]  # (ni, 6)
@@ -239,8 +239,9 @@ class AE(SaveableModule):
             p_father = X_ab_xy[I[:,2]]  # (ni, 6)
             f_father = Feature[I[:,2]]  # (ni, d)
             # (n, d), (n, 6), (n, 1), (n, d), (n, 6), (n, 1)
+            # f_father, p_father -->
             left_featrue, left_P, left_isleaf, right_featrue, right_P, right_isleaf = self.decoder(f_father, p_father)
-            
+
             weight = 1
 
             if(self.weight_type==1):
@@ -317,7 +318,7 @@ class AE(SaveableModule):
         Feature = Feature.squeeze(0)  # (n, d)
         Node_is_leaf = Node_is_leaf.squeeze(0)  # (n, 1)
        
-        Feature_New = self.encode(X, Feature, I_list)  # (n, d)
+        Feature_New = self.encode(X, Feature, I_list)  # (n, d) LSTM output
         # (n, 6), (n, 6), (n, d), (1), (1)
         X_r, X_ab_xy, X_ab_xy_r, Feature_r, Loss_P, Loss_Leaf, Num, left_check, right_check = self.decode(X, Node_is_leaf, Feature_New, I_list)
         # print(X_ab_xy, X_ab_xy_r)

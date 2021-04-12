@@ -1,6 +1,0 @@
-jupyter notebook --port=8111
-
-enter
-
-ssh sc8635@peel.hpc.nyu.edu -L 127.0.0.1:8111:127.0.0.1:8008
-
