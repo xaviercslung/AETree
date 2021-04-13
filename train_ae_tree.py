@@ -201,14 +201,14 @@ test_loader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=False)
 torch.cuda.set_device(0)
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-loss_save_dir = './log/'
+loss_save_dir = './log_'+testNum+'/'
 if not os.path.exists(loss_save_dir):
     os.makedirs(loss_save_dir)
-LOG_loss = open(os.path.join(loss_save_dir, 'tree_lstm_64_log_loss'+testNum+'.txt'), 'w')
+LOG_loss = open(os.path.join(loss_save_dir, 'tree_lstm_64_log_loss_'+testNum+'.txt'), 'w')
 writer = SummaryWriter(testNum)
 model = AE(device, leaf_loss=True, weight_leaf=weightLeaf, weight_type=weightType,
-           save_name='tree_lstm_64'+testNum, n_feature=512)
+           save_name='tree_lstm_64_'+testNum, n_feature=512)
 model.to(device)
 train_ae(model, train_loader, test_loader, device, loss_save_dir, learningRate=learningRate, num_epochs=3000, M=1, )
-writer.export_scalars_to_json("./tree_lstm_64"+testNum+".json")
+writer.export_scalars_to_json("./tree_lstm_64_"+testNum+".json")
 writer.close()
