@@ -139,7 +139,7 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
 
                 if (torch.isnan(test_loss)):
                     print("Epoch {epoch} Loss in nan!!!".format(epoch=epoch))
-                    break;
+                    break
                 else:
                     if test_loss < best_loss:
                         best_loss = test_loss
