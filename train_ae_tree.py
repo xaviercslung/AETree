@@ -128,14 +128,14 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
                 logs['test_loss'].append(test_loss)
 
                 writer.add_scalars('ae_lstm_' + str(numBox) + '_' + testNum,
-                                   {'train_loss_' + testNum: train_loss,
-                                    'train_loss_ab_' + testNum: train_loss_ab,
-                                    'train_loss_p_' + testNum: train_loss_p,
-                                    'train_loss_leaf_' + testNum: train_loss_leaf,
-                                    'test_loss_' + testNum: test_loss,
-                                    'test_loss_ab_' + testNum: test_loss_ab,
-                                    'test_loss_p_' + testNum: test_loss_p,
-                                    'test_loss_leaf_' + testNum: test_loss_leaf, }, epoch)
+                                   {'TRAIN_LOSS_' + testNum: train_loss,
+                                    'TRAIN_LOSS_AB_' + testNum: train_loss_ab,
+                                    'TRAIN_LOSS_P_' + testNum: train_loss_p,
+                                    'TRAIN_LOSS_LEAF_' + testNum: train_loss_leaf,
+                                    'TEST_LOSS_' + testNum: test_loss,
+                                    'TEST_LOSS_AB_' + testNum: test_loss_ab,
+                                    'TEST_LOSS_P_' + testNum: test_loss_p,
+                                    'TEST_LOSS_LEAF_' + testNum: test_loss_leaf, }, epoch)
 
                 if (torch.isnan(test_loss)):
                     print("Epoch {epoch} Loss in nan!!!".format(epoch=epoch))
