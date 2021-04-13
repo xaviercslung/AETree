@@ -20,19 +20,19 @@ try:
     weightLeaf, weightType, learningRate, testNum, input_data_name, numBox = sys.argv[1:]
     weightLeaf = float(weightLeaf)
     weightType = int(weightType)
-    learningRate=float(learningRate)
+    learningRate = float(learningRate)
     testNum = 'test_' + str(testNum)
     input_data = '/home/sc8635/' + input_data_name
     numBox = int(numBox)
 except:
     print('invalid number of arguments')
 
-print('weight leaf: '+str(weightLeaf))
-print('weight type: '+str(weightType))
-print('learning rate: '+str(learningRate))
-print('test number: '+str(testNum))
-print('input data DIR: '+str(input_data))
-print('number of boxes: '+str(numBox))
+print('weight leaf: ' + str(weightLeaf))
+print('weight type: ' + str(weightType))
+print('learning rate: ' + str(learningRate))
+print('test number: ' + str(testNum))
+print('input data DIR: ' + str(input_data))
+print('number of boxes: ' + str(numBox))
 
 
 def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, device, loss_save_dir,
@@ -127,15 +127,15 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
                 logs['train_loss'].append(train_loss)
                 logs['test_loss'].append(test_loss)
 
-                writer.add_scalars('ae_lstm_' + str(numBox)+'_'+testNum,
-                                   {'train_loss_'+testNum: train_loss,
-                                    'train_loss_ab_'+testNum: train_loss_ab,
-                                    'train_loss_p_'+testNum: train_loss_p,
-                                    'train_loss_leaf_'+testNum: train_loss_leaf,
-                                    'test_loss_'+testNum: test_loss,
-                                    'test_loss_ab_'+testNum: test_loss_ab,
-                                    'test_loss_p_'+testNum: test_loss_p,
-                                    'test_loss_leaf_'+testNum: test_loss_leaf, }, epoch)
+                writer.add_scalars('ae_lstm_' + str(numBox) + '_' + testNum,
+                                   {'train_loss_' + testNum: train_loss,
+                                    'train_loss_ab_' + testNum: train_loss_ab,
+                                    'train_loss_p_' + testNum: train_loss_p,
+                                    'train_loss_leaf_' + testNum: train_loss_leaf,
+                                    'test_loss_' + testNum: test_loss,
+                                    'test_loss_ab_' + testNum: test_loss_ab,
+                                    'test_loss_p_' + testNum: test_loss_p,
+                                    'test_loss_leaf_' + testNum: test_loss_leaf, }, epoch)
 
                 if (torch.isnan(test_loss)):
                     print("Epoch {epoch} Loss in nan!!!".format(epoch=epoch))
@@ -179,11 +179,10 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
     LOG_loss.close()
 
 
-def train_ae(model, train_loader, test_loader, device, loss_save_dir, learningRate, M=1, num_epochs=1000,):
+def train_ae(model, train_loader, test_loader, device, loss_save_dir, learningRate, M=1, num_epochs=1000, ):
     #     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4, drop_last=True)
     #     test_loader = DataLoader(test_dataset, batch_size=32, num_workers=4, drop_last=True)
 
-    print('check LR:{}'.format(learningRate))
     optimizer = Adam(model.parameters(), lr=learningRate)
     scheduler = StepLR(optimizer, step_size=400, gamma=0.5)
 
@@ -210,6 +209,6 @@ writer = SummaryWriter(testNum)
 model = AE(device, leaf_loss=True, weight_leaf=weightLeaf, weight_type=weightType,
            save_name='tree_lstm_32_print_45000_time_leaf_rerun2', n_feature=512)
 model.to(device)
-train_ae(model, train_loader, test_loader, device, loss_save_dir, learningRate=learningRate, num_epochs=3000, M=1,)
+train_ae(model, train_loader, test_loader, device, loss_save_dir, learningRate=learningRate, num_epochs=3000, M=1, )
 writer.export_scalars_to_json("./tree_lstm_32_print_45000_time_leaf_rerun2.json")
 writer.close()
