@@ -10,6 +10,8 @@
 
 module purge
 
+## python <weight_leaf,weight_type,learning rate,test_number,data_file_name,number of boxes>
+## python -u train_ae_tree.py 0.01 2 0.05 100 AETree_64.pickle 64
 singularity exec --nv \
 	    --overlay /home/sc8635/pytorch1.8.0-cuda11.1.ext3:ro \
 	    /scratch/work/public/singularity/cuda11.1.1-cudnn8-devel-ubuntu20.04.sif \
