@@ -4,7 +4,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
 #SBATCH --time=100:00:00
-#SBATCH --mem=64GB
+#SBATCH --mem=12GB
 #SBATCH --gres=gpu
 #SBATCH --job-name=TrainAETree_64boxes
 
