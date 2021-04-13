@@ -183,6 +183,7 @@ def train_ae(model, train_loader, test_loader, device, loss_save_dir, learningRa
     #     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4, drop_last=True)
     #     test_loader = DataLoader(test_dataset, batch_size=32, num_workers=4, drop_last=True)
 
+    print('check LR:{}'.format(learningRate))
     optimizer = Adam(model.parameters(), lr=learningRate)
     scheduler = StepLR(optimizer, step_size=400, gamma=0.5)
 
