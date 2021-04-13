@@ -89,7 +89,7 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
                 num += 1
 
                 lr = optimizer.param_groups[0]['lr']
-                optimizer.param_groups[0]['lr'] = max(lr, 1e-6)
+                # optimizer.param_groups[0]['lr'] = max(lr, 1e-6)
 
                 optimizer.step()
             scheduler.step()
