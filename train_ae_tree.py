@@ -204,11 +204,11 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 loss_save_dir = './log/'
 if not os.path.exists(loss_save_dir):
     os.makedirs(loss_save_dir)
-LOG_loss = open(os.path.join(loss_save_dir, 'tree_lstm_32_print_45000_time_leaf_rerun2.txt'), 'w')
+LOG_loss = open(os.path.join(loss_save_dir, 'tree_lstm_64_log_loss'+testNum+'.txt'), 'w')
 writer = SummaryWriter(testNum)
 model = AE(device, leaf_loss=True, weight_leaf=weightLeaf, weight_type=weightType,
-           save_name='tree_lstm_32_print_45000_time_leaf_rerun2', n_feature=512)
+           save_name='tree_lstm_64'+testNum, n_feature=512)
 model.to(device)
 train_ae(model, train_loader, test_loader, device, loss_save_dir, learningRate=learningRate, num_epochs=3000, M=1, )
-writer.export_scalars_to_json("./tree_lstm_32_print_45000_time_leaf_rerun2.json")
+writer.export_scalars_to_json("./tree_lstm_64"+testNum+".json")
 writer.close()
