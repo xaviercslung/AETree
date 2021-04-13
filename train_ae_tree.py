@@ -127,15 +127,15 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
                 logs['train_loss'].append(train_loss)
                 logs['test_loss'].append(test_loss)
 
-                writer.add_scalars('ae_lstm_32_print_45000_time_leaf_rerun2',
-                                   {'train_loss': train_loss,
-                                    'train_loss_ab': train_loss_ab,
-                                    'train_loss_p': train_loss_p,
-                                    'train_loss_leaf': train_loss_leaf,
-                                    'test_loss': test_loss,
-                                    'test_loss_ab': test_loss_ab,
-                                    'test_loss_p': test_loss_p,
-                                    'test_loss_leaf': test_loss_leaf, }, epoch)
+                writer.add_scalars('ae_lstm_' + str(numBox)+testNum,
+                                   {'train_loss'+testNum: train_loss,
+                                    'train_loss_ab+'+testNum: train_loss_ab,
+                                    'train_loss_p'+testNum: train_loss_p,
+                                    'train_loss_leaf'+testNum: train_loss_leaf,
+                                    'test_loss'+testNum: test_loss,
+                                    'test_loss_ab'+testNum: test_loss_ab,
+                                    'test_loss_p'+testNum: test_loss_p,
+                                    'test_loss_leaf'+testNum: test_loss_leaf, }, epoch)
 
                 if (torch.isnan(test_loss)):
                     print("Epoch {epoch} Loss in nan!!!".format(epoch=epoch))
@@ -205,7 +205,7 @@ loss_save_dir = './log/'
 if not os.path.exists(loss_save_dir):
     os.makedirs(loss_save_dir)
 LOG_loss = open(os.path.join(loss_save_dir, 'tree_lstm_32_print_45000_time_leaf_rerun2.txt'), 'w')
-writer = SummaryWriter('tree_lstm_32boxes')
+writer = SummaryWriter(testNum)
 model = AE(device, leaf_loss=True, weight_leaf=weightLeaf, weight_type=weightType,
            save_name='tree_lstm_32_print_45000_time_leaf_rerun2', n_feature=512)
 model.to(device)
