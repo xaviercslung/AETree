@@ -249,6 +249,10 @@ class AE(SaveableModule):
             if(self.weight_type==2):
                 weight = (2*(num_I-i))
 
+            if(self.weight_type==3):
+                weight = (1*(num_I-i))
+
+
 
             left_re_loss = self.cal_distance_re(p_left, left_P)
             right_re_loss = self.cal_distance_re(p_right, right_P)
