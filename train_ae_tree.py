@@ -15,6 +15,7 @@ from model_ae_tree_box_ab2_new_re_weight_lstm_print import *
 import copy
 import time
 from tensorboardX import SummaryWriter
+from visualization import *
 
 try:
     weightLeaf, weightType, learningRate, testNum, input_data_name, numBox = sys.argv[1:]
@@ -156,6 +157,99 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
                     )
             if (epoch % 200) == 0 or epoch == num_epochs - 1:
                 model.save_to_drive(name=model.DEFAULT_SAVED_NAME + "_" + str(epoch))
+                for loader in [train_loader, test_loader]:
+                    save_name = ''
+                    if loader == train_loader:
+                        save_name = 'train'
+                    elif loader == test_loader:
+                        save_name = 'test'
+
+                    for index in [3, 5, 9]:
+                        for i, (X, I_list, Feature, Node_is_leaf) in enumerate(loader, 0):
+                            if (i == index):
+                                break
+
+                        X = X.squeeze(0)
+                        Feature = Feature.squeeze(0)
+                        Node_is_leaf = Node_is_leaf.squeeze(0)
+                        X = X.float()
+                        Feature = Feature.float()
+
+                        Feature_New = model.encode(X, Feature, I_list)
+                        X_r, X_ab_xy, X_ab_xy_r, Feature_r, Loss_P, Loss_Leaf, Num, _, _ = model.decode(X, Node_is_leaf,
+                                                                                                        Feature_New, I_list)
+
+                        X_ab_xy = X_ab_xy.detach().numpy()
+                        X_ab_xy_r = X_ab_xy_r.detach().numpy()
+
+                        N = 64  # change num_boxes
+                        N_total = 2 * N - 1
+
+                        X_tree0 = X_ab_xy[:N_total, :2]
+                        X_tree0_r = X_ab_xy_r[:N_total, :2]
+
+                        Feature_tree0 = X_ab_xy[:N_total, 2:]
+                        Feature_tree0_r = X_ab_xy_r[:N_total, 2:]
+
+                        box_list = []
+                        center_list = []
+                        txt_list = []
+                        color_list = []
+
+                        n = 1
+                        node_index = np.arange(N)
+                        color = np.zeros(len(node_index))
+                        P = X_tree0[node_index, :2]
+                        F = Feature_tree0[node_index]
+                        box = get_box_2(P, F)
+                        box_list.append(box)
+                        center_list.append(P)
+                        txt_list.append(node_index)
+                        color_list.append(color)
+
+                        P = X_tree0_r[node_index, :2]
+                        F = Feature_tree0_r[node_index]
+                        box = get_box_2(P, F)
+                        box_list.append(box)
+                        center_list.append(P)
+                        txt_list.append(node_index)
+                        color_list.append(color)
+
+                        for i, Ii in enumerate(I_list):
+                            Ii = Ii.squeeze(0).detach().numpy()
+                            #     print(Ii[Ii[:,2] < 127][:,:3])
+                            #     node_index = (Ii[Ii[:,2] < 127][:,2]).astype('int32')
+                            left_idx = (Ii[Ii[:, 2] < N_total][:, 0]).astype('int32')
+                            right_idx = (Ii[Ii[:, 2] < N_total][:, 1]).astype('int32')
+                            father_idx = (Ii[Ii[:, 2] < N_total][:, 2]).astype('int32')
+                            node_index = list(set(node_index) - set(left_idx) - set(right_idx) | set(father_idx))
+                            color = np.zeros(len(node_index))
+                            for idx in father_idx:
+                                color[(np.arange(len(node_index))[node_index == idx])] = 1
+                                #     print(node_index)
+                            if (len(node_index) > 0):
+                                P = X_tree0[node_index, :2]
+                                F = Feature_tree0[node_index]
+                                #         print(P,F)
+                                box = get_box_2(P, F)
+                                #         print(box)
+                                box_list.append(box)
+                                center_list.append(P)
+                                txt_list.append(node_index)
+                                color_list.append(color)
+
+                                P = X_tree0_r[node_index, :2]
+                                F = Feature_tree0_r[node_index]
+                                box = get_box_2(P, F)
+                                #     print(box.shape)
+                                box_list.append(box)
+                                center_list.append(P)
+                                txt_list.append(node_index)
+                                color_list.append(color)
+
+                                n = n + 1
+                        plot_boxes(box_list, txt_list, center_list, color_list, n, 2,
+                                   save=True, savename=testNum+'_'+save_name+'_'+'index'+'_'+str(index)+'.jpg')
 
     except KeyboardInterrupt:
         pass
