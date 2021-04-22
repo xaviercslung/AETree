@@ -157,6 +157,8 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
                     )
             if (epoch % 200) == 0 or epoch == num_epochs - 1 or epoch == 1:
                 model.save_to_drive(name=model.DEFAULT_SAVED_NAME + "_" + str(epoch))
+
+                test_model = AE.load_from_drive(AE, name='tree_lstm_64_test_47_best', model_dir='', device=torch.device('cuda'), n_feature=512)
                 for loader in [train_loader, test_loader]:
                     save_name = ''
                     if loader == train_loader:
@@ -175,8 +177,8 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
                         X = X.float()
                         Feature = Feature.float()
 
-                        Feature_New = model.encode(X, Feature, I_list)
-                        X_r, X_ab_xy, X_ab_xy_r, Feature_r, Loss_P, Loss_Leaf, Num, _, _ = model.decode(X, Node_is_leaf,
+                        Feature_New = test_model.encode(X, Feature, I_list)
+                        X_r, X_ab_xy, X_ab_xy_r, Feature_r, Loss_P, Loss_Leaf, Num, _, _ = test_model.decode(X, Node_is_leaf,
                                                                                                         Feature_New, I_list)
 
                         X_ab_xy = X_ab_xy.detach().numpy()
