@@ -19,12 +19,12 @@ sshpass -f Live99long! scp -o 'ProxyCommand ssh sc8635@gw.hpc.nyu.edu -W %h:%p' 
 scp -o 'ProxyCommand ssh username@B -W %h:%p' someFile username@C:/some/path
 
 
-scp -r -o 'ProxyCommand ssh sc8635@gw.hpc.nyu.edu -W %h:%p' sc8635@greene.hpc.nyu.edu:/home/sc8635/test_02/tree_lstm_32boxes .
+scp -r -o 'ProxyCommand ssh sc8635@gw.hpc.nyu.edu -W %h:%p' sc8635@greene.hpc.nyu.edu:/home/sc8635/64_boxes/test_46 .
 
 
 scp -r sc8635@greene.hpc.nyu.edu:/home/sc8635/test_01/tree_lstm_32boxes .
 
-tensorboard --logdir=./tree_lstm_32boxes
+tensorboard --logdir=./aetree_64_tensorboard
 
 pip3 install tensorboard
 
