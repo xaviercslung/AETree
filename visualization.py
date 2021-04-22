@@ -87,7 +87,7 @@ def draw_box(box, txt, center, color):
         draw_polygon_c(p, txt[i], center[i], c)
 
 
-def plot_boxes(samples, label, center, color, n, m,save=False, savename='pclouds'):
+def plot_boxes(samples, label, center, color, n, m, test_num,save=False, savename='pclouds'):
     fig = plt.figure(figsize=(5 * m, 5 * n))
     fig.set_tight_layout(True)
     for i in range(n):
@@ -97,7 +97,7 @@ def plot_boxes(samples, label, center, color, n, m,save=False, savename='pclouds
             #             print(idx)
             draw_box(samples[idx], label[idx], center[idx], color[idx])
     if save:
-        plt.savefig('/64boxes_plots/'+savename)
+        plt.savefig('/log_'+test_num+'/'+savename)
 
     plt.show()
 

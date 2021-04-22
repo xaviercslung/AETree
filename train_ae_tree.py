@@ -248,7 +248,7 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
                                 color_list.append(color)
 
                                 n = n + 1
-                        plot_boxes(box_list, txt_list, center_list, color_list, n, 2,
+                        plot_boxes(box_list, txt_list, center_list, color_list, n, 2, test_num=testNum,
                                    save=True, savename=testNum+'_'+save_name+'_'+'index'+'_'+str(index)+'.jpg')
 
     except KeyboardInterrupt:
