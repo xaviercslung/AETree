@@ -156,7 +156,7 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
                                     test_loss=test_loss,
                                     test_time=test_time)
                     )
-            if (epoch % 200) == 0 or epoch == num_epochs - 1 or epoch == 1:
+            if (epoch % 200) == 0 or epoch == num_epochs - 1:
                 model.save_to_drive(name=model.DEFAULT_SAVED_NAME + "_" + str(epoch))
 
                 load_dir = './log_'+testNum+'/tree_lstm_64_'+testNum+'_best'
