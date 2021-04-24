@@ -22,6 +22,7 @@ try:
     weightLeaf = float(weightLeaf)
     weightType = int(weightType)
     learningRate = float(learningRate)
+    tNum = str(testNum)
     testNum = 'test_' + str(testNum)
     input_data = '/home/sc8635/' + input_data_name
     numBox = int(numBox)
@@ -163,12 +164,13 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
 
                 for loader in [train_loader, test_loader]:
                     save_name = ''
+
                     if loader == train_loader:
                         save_name = 'train_'+str(train_loss)
                     elif loader == test_loader:
                         test_loss, test_loss_ab, test_loss_p, test_loss_leaf, test_loss_left_check, test_loss_right_check = model.loss_on_loader(
                             loader, device)
-                        save_name = 'test_'+str(test_loss)
+                        save_name = 'test_'+str(test_loss.item())
 
                     for index in [3, 5, 9]:
                         for i, (X, I_list, Feature, Node_is_leaf) in enumerate(loader, 0):
@@ -254,9 +256,11 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
                                 color_list.append(color)
 
                                 n = n + 1
+                        fig_dir = '{0}_E{1}_I{2}_{3}.jpg'.format(save_name, str(epoch), str(index), testNum)
                         plot_boxes(box_list, txt_list, center_list, color_list, n, 2, test_num=testNum,
-                                   save=True, savename=testNum+'_'+'index'+'_'+str(index)+str(epoch)+save_name+'.jpg')
-                        # test_21_index_3_test_
+                                   save=True, savename=fig_dir)
+                        # T21_train_4.5435334(E0,I3).jpg
+                        # train_4.5435334_E200_I5_test_21
     except KeyboardInterrupt:
         pass
     #     print(best_loss, best_params)
@@ -301,7 +305,7 @@ test_loader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=False)
 torch.cuda.set_device(0)
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-loss_save_dir = './log_txt_'+testNum+'/'
+loss_save_dir = './log_'+testNum+'/'
 if not os.path.exists(loss_save_dir):
     os.makedirs(loss_save_dir)
 LOG_loss = open(os.path.join(loss_save_dir, 'tree_lstm_64_log_loss_'+testNum+'.txt'), 'w')
