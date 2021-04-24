@@ -158,13 +158,17 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
             if (epoch % 200) == 0 or epoch == num_epochs - 1 or epoch == 1:
                 model.save_to_drive(name=model.DEFAULT_SAVED_NAME + "_" + str(epoch))
 
-                test_model = AE.load_from_drive(AE, name='tree_lstm_64_test_47_best', model_dir='', device=torch.device('cuda'), n_feature=512)
+                load_dir = './log_'+testNum+'/tree_lstm_64_'+testNum+'_best'
+                test_model = AE.load_from_drive(AE, name=load_dir, model_dir='', device=torch.device('cuda'), n_feature=512)
+
                 for loader in [train_loader, test_loader]:
                     save_name = ''
                     if loader == train_loader:
-                        save_name = 'train'
+                        save_name = 'train_'+str(train_loss)
                     elif loader == test_loader:
-                        save_name = 'test'
+                        test_loss, test_loss_ab, test_loss_p, test_loss_leaf, test_loss_left_check, test_loss_right_check = model.loss_on_loader(
+                            loader, device)
+                        save_name = 'test_'+str(test_loss)
 
                     for index in [3, 5, 9]:
                         for i, (X, I_list, Feature, Node_is_leaf) in enumerate(loader, 0):
@@ -251,8 +255,8 @@ def train_unsupervised(model, optimizer, scheduler, train_loader, test_loader, d
 
                                 n = n + 1
                         plot_boxes(box_list, txt_list, center_list, color_list, n, 2, test_num=testNum,
-                                   save=True, savename=testNum+'_'+save_name+'_'+'index'+'_'+str(index)+'.jpg')
-
+                                   save=True, savename=testNum+'_'+'index'+'_'+str(index)+str(epoch)+save_name+'.jpg')
+                        # test_21_index_3_test_
     except KeyboardInterrupt:
         pass
     #     print(best_loss, best_params)
