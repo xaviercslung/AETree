@@ -250,7 +250,7 @@ class AE(SaveableModule):
                 weight = (2*(num_I-i))
 
             if(self.weight_type==3):
-                weight = (1*(num_I-i))
+                weight = ((2**(num_I-i-1))/2)
 
 
 
@@ -318,7 +318,7 @@ class AE(SaveableModule):
             num: Number of Father Nodes
         ''' 
         X = X.squeeze(0)  # (n, 3)
-        Feature = Feature.squeeze(0)  # (n, d)
+        Feature = Feature.squeeze(0)  # (n, d)x
         Node_is_leaf = Node_is_leaf.squeeze(0)  # (n, 1)
        
         Feature_New = self.encode(X, Feature, I_list)  # (n, d)
