@@ -294,11 +294,11 @@ def train_ae(model, train_loader, test_loader, device, loss_save_dir, learningRa
                        M=M, num_epochs=num_epochs)
 
 
-trainset = TreeData(data_folder="/home/sc8635/AETree_64.pickle", train=True, split=0.9, n_feature=512, num_box=numBox,
+trainset = TreeData(data_folder="../AETree_64.pickle", train=True, split=0.9, n_feature=512, num_box=numBox,
                     batch_size=50)
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=1, shuffle=True)
 
-testset = TreeData(data_folder="/home/sc8635/AETree_64.pickle", train=False, split=0.9, n_feature=512, num_box=numBox,
+testset = TreeData(data_folder="../AETree_64.pickle", train=False, split=0.9, n_feature=512, num_box=numBox,
                    batch_size=50)
 test_loader = torch.utils.data.DataLoader(testset, batch_size=1, shuffle=False)
 
